@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <meta name="theme-color" content="#0f0f13"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="flowbrain"/>
+  <title>flowbrain</title>
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="apple-touch-icon" href="icons/icon-192.png"/>
+  <link rel="icon" href="icons/icon-192.png"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- Alert banner -->
+  <div class="alert-wrap" id="alert-wrap"></div>
+
+  <!-- Status bar -->
+  <div class="status-bar">
+    <span id="clock">--:--</span>
+    <span id="winddown-indicator" class="winddown-badge hidden" onclick="goScreen('winddown')">🌙 wind-down</span>
+    <span style="font-size:12px;color:var(--accent)">⚡ focus</span>
+  </div>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="app-title">flow<span id="accent-span" style="color:var(--accent)">brain</span></div>
+    <div class="focus-pill" onclick="goScreen('home')">
+      <div class="focus-dot" id="focus-dot"></div>
+      <span id="focus-status" style="color:var(--accent)">on track</span>
+    </div>
+  </div>
+
+  <!-- Scroll area -->
+  <div class="scroll-area">
+
+    <!-- HOME -->
+    <div class="screen active" id="screen-home">
+      <div class="home-greeting" id="greeting-text">good morning,</div>
+      <div class="home-name" id="user-name-display">you</div>
+
+      <div class="quick-stat-row">
+        <div class="qs-card">
+          <span class="qs-icon">🍅</span>
+          <div><div class="qs-val" id="qs-pomodoro" style="color:var(--accent)">0</div><div class="qs-lbl">pomodoros today</div></div>
+        </div>
+        <div class="qs-card">
+          <span class="qs-icon">🌱</span>
+          <div><div class="qs-val" id="qs-habits" style="color:#22c55e">0/5</div><div class="qs-lbl">habits done</div></div>
+        </div>
+      </div>
+
+      <div class="capture-row">
+        <input class="capture-input" id="capture-field" placeholder="capture a thought..." onkeydown="handleCapture(event)"/>
+        <div class="mic-btn" id="mic-btn" onclick="toggleMic()"><span id="mic-icon">🎙</span></div>
+      </div>
+
+      <div class="section-label">reminders today</div>
+      <div class="reminder-list" id="reminder-list"></div>
+
+      <div class="section-label">focus timer</div>
+      <div class="timer-card">
+        <div class="ring-wrap">
+          <svg width="80" height="80" class="progress-ring">
+            <circle class="ring-bg" cx="40" cy="40" r="32"/>
+            <circle class="ring-fill" id="ring" cx="40" cy="40" r="32" stroke-dasharray="201" stroke-dashoffset="0"/>
+          </svg>
+        </div>
+        <div class="timer-display" id="timer-display" style="color:var(--accent)">25:00</div>
+        <div class="timer-label" id="timer-label">pomodoro · deep work</div>
+        <div class="timer-controls">
+          <button class="btn" onclick="resetTimer()">reset</button>
+          <button class="btn primary" id="timer-btn" onclick="toggleTimer()">start</button>
+          <button class="btn" onclick="skipTimer()">skip</button>
+        </div>
+      </div>
+
+      <div class="section-label">tiles</div>
+      <div class="tile-grid">
+        <div class="tile accent-purple" onclick="goScreen('stats')">
+          <span class="tile-icon">📊</span>
+          <div class="tile-name">focus stats</div>
+          <div class="tile-sub">weekly overview</div>
+        </div>
+        <div class="tile accent-night" onclick="goScreen('winddown')">
+          <span class="tile-icon">🌙</span>
+          <div class="tile-name">wind-down</div>
+          <div class="tile-sub">evening routine</div>
+          <div class="tile-badge night" id="wnd-badge-count">5 set</div>
+        </div>
+        <div class="tile accent-teal" onclick="goScreen('habits')">
+          <span class="tile-icon">🌱</span>
+          <div class="tile-name">habits</div>
+          <div class="tile-sub">streaks &amp; history</div>
+        </div>
+        <div class="tile accent-amber" onclick="goScreen('settings')">
+          <span class="tile-icon">🎨</span>
+          <div class="tile-name">personalise</div>
+          <div class="tile-sub">name, colour, snooze</div>
+        </div>
+        <div class="tile wide accent-red" onclick="openQuickAdd()">
+          <span class="tile-icon">➕</span>
+          <div class="tile-name">quick add reminder</div>
+          <div class="tile-sub">set a new vocal reminder or alarm</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REMINDERS (full screen) -->
+    <div class="screen" id="screen-reminders">
+      <div class="section-label">your reminders</div>
+      <div class="reminder-list" id="all-reminder-list"></div>
+      <button class="add-btn" onclick="openQuickAdd()">+ add reminder</button>
+    </div>
+
+    <!-- STATS -->
+    <div class="screen" id="screen-stats">
+      <div class="section-label">this week</div>
+      <div class="metric-grid">
+        <div class="metric-card"><div class="metric-val" id="stat-pomodoros" style="color:var(--accent)">0</div><div class="metric-label">pomodoros</div></div>
+        <div class="metric-card"><div class="metric-val" id="stat-focus-hrs" style="color:#22c55e">0h</div><div class="metric-label">focus time</div></div>
+        <div class="metric-card"><div class="metric-val" id="stat-habits-done" style="color:#f59e0b">0</div><div class="metric-label">habits done</div></div>
+        <div class="metric-card"><div class="metric-val" id="stat-best-streak" style="color:#f87171">0</div><div class="metric-label">best streak</div></div>
+      </div>
+      <div class="section-label">daily pomodoros</div>
+      <div class="bar-chart" id="pomodoro-bar-chart"></div>
+      <div class="section-label">habit completion</div>
+      <div class="bar-chart" id="habit-stat-list"></div>
+    </div>
+
+    <!-- HABITS -->
+    <div class="screen" id="screen-habits">
+      <div class="section-label">today's habits</div>
+      <div class="habit-card" id="habit-list-main"></div>
+      <div class="habit-add-row">
+        <input class="habit-add-input" id="habit-input" placeholder="add a habit..."/>
+        <button class="habit-add-btn" onclick="addHabit()">+ add</button>
+      </div>
+    </div>
+
+    <!-- WIND-DOWN -->
+    <div class="screen" id="screen-winddown">
+      <div class="wnd-hero">
+        <span>🌙</span>
+        <div>
+          <div style="font-size:14px;font-weight:500;color:#a5b4fc">wind-down mode</div>
+          <div style="font-size:11px;color:#555;margin-top:2px">evening reminders to prep tomorrow</div>
+        </div>
+        <div class="wnd-toggle" id="wnd-master-toggle" onclick="toggleWinddown()"></div>
+      </div>
+      <div class="section-label">evening reminders</div>
+      <div class="wnd-card" id="wnd-list"></div>
+      <div class="wnd-add">
+        <input class="wnd-time-input" id="wnd-new-time" type="time" value="21:00"/>
+        <input class="wnd-input" id="wnd-new-text" placeholder="add reminder..."/>
+        <button class="wnd-add-btn" onclick="addWinddown()">+ add</button>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="screen" id="screen-settings">
+      <div class="section-label">your identity</div>
+      <div class="sett-card">
+        <div class="sett-row">
+          <div><div class="sett-label">your name</div><div class="sett-sub">shown in greeting</div></div>
+          <input class="sett-input" id="sett-name" placeholder="your name" oninput="previewName()"/>
+        </div>
+      </div>
+      <div class="section-label">accent colour</div>
+      <div class="sett-card">
+        <div style="padding:10px 0">
+          <div class="sett-label" style="margin-bottom:12px">pick your theme colour</div>
+          <div class="color-swatches" id="color-swatches"></div>
+        </div>
+      </div>
+      <div class="section-label">snooze duration</div>
+      <div class="sett-card">
+        <div style="padding:10px 0">
+          <div class="sett-label" style="margin-bottom:10px">minutes per snooze</div>
+          <div class="snooze-row" id="snooze-opts">
+            <div class="snooze-opt" onclick="selectSnooze(this,2)">2 min</div>
+            <div class="snooze-opt selected" onclick="selectSnooze(this,5)">5 min</div>
+            <div class="snooze-opt" onclick="selectSnooze(this,10)">10 min</div>
+            <div class="snooze-opt" onclick="selectSnooze(this,15)">15 min</div>
+          </div>
+        </div>
+      </div>
+      <div class="section-label">wind-down time</div>
+      <div class="sett-card">
+        <div class="sett-row">
+          <div><div class="sett-label">start wind-down at</div><div class="sett-sub">activates evening mode</div></div>
+          <input type="time" class="sett-input" id="sett-winddown-time" value="20:30" style="width:100px"/>
+        </div>
+      </div>
+      <div class="section-label">voice settings</div>
+      <div class="sett-card">
+        <div class="sett-row">
+          <div><div class="sett-label">reminder volume</div></div>
+          <input type="range" min="0.1" max="1" step="0.1" value="0.8" id="vol-slider" style="width:120px;accent-color:var(--accent)"/>
+        </div>
+        <div class="sett-row">
+          <div><div class="sett-label">test voice</div><div class="sett-sub">hear how it sounds</div></div>
+          <button class="btn primary" onclick="testVoice()" style="padding:7px 14px;font-size:12px">test</button>
+        </div>
+      </div>
+      <button class="save-btn" onclick="saveSettings()">save changes</button>
+    </div>
+
+  </div><!-- end scroll-area -->
+
+  <!-- Bottom nav -->
+  <div class="bottom-nav">
+    <div class="nav-item active" id="nav-home" onclick="goScreen('home')"><span class="nav-icon">🏠</span><span class="nav-label">home</span></div>
+    <div class="nav-item" id="nav-reminders" onclick="goScreen('reminders')"><span class="nav-icon">🔔</span><span class="nav-label">remind</span></div>
+    <div class="nav-item" id="nav-stats" onclick="goScreen('stats')"><span class="nav-icon">📊</span><span class="nav-label">stats</span></div>
+    <div class="nav-item" id="nav-habits" onclick="goScreen('habits')"><span class="nav-icon">🌱</span><span class="nav-label">habits</span></div>
+    <div class="nav-item" id="nav-settings" onclick="goScreen('settings')"><span class="nav-icon">⚙️</span><span class="nav-label">settings</span></div>
+  </div>
+
+  <!-- Quick Add Modal -->
+  <div class="modal-overlay hidden" id="modal-overlay" onclick="closeModalOutside(event)">
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <div class="modal-title">quick add reminder</div>
+      <input class="modal-input" id="modal-text" placeholder="what's the reminder?"/>
+      <input class="modal-input" id="modal-time" type="time"/>
+      <div class="modal-row">
+        <div class="chip selected" onclick="selectChip(this)">reminder</div>
+        <div class="chip" onclick="selectChip(this)">meds</div>
+        <div class="chip" onclick="selectChip(this)">work</div>
+        <div class="chip" onclick="selectChip(this)">health</div>
+        <div class="chip" onclick="selectChip(this)">idea</div>
+      </div>
+      <button class="save-btn" onclick="saveEntry()">save &amp; schedule voice alert</button>
+    </div>
+  </div>
+
+</div><!-- end app -->
+
+<script src="app.js"></script>
+</body>
+</html>
