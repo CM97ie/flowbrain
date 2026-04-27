@@ -317,6 +317,39 @@ html, body { height: 100%; background: #0a0a0e; }
 .reminder-days { display:flex; gap:3px; margin-top:3px; flex-wrap:wrap; }
 .rday { font-size:9px; padding:1px 5px; border-radius:4px; background:var(--accent-dim); color:var(--accent); font-weight:500; }
 
+
+/* ── Capture Inbox ── */
+.inbox-tabs { display:flex; gap:8px; margin-bottom:14px; overflow-x:auto; padding-bottom:4px; scrollbar-width:none; }
+.inbox-tabs::-webkit-scrollbar { display:none; }
+.inbox-tab { padding:7px 14px; border-radius:12px; font-size:12px; font-weight:500; background:#16161f; border:1px solid #222230; color:#666; cursor:pointer; white-space:nowrap; transition:all .15s; flex-shrink:0; }
+.inbox-tab.active { background:var(--accent-dim); border-color:var(--accent-border); color:var(--accent); }
+.inbox-tab .tab-count { font-family:'DM Mono',monospace; font-size:10px; margin-left:5px; opacity:0.7; }
+.capture-card { background:#16161f; border:1px solid #222230; border-radius:14px; padding:14px; margin-bottom:8px; }
+.capture-card-header { display:flex; align-items:flex-start; gap:10px; }
+.capture-card-text { flex:1; font-size:13px; color:#c4c0d8; line-height:1.5; }
+.capture-card-time { font-size:10px; color:#444; font-family:'DM Mono',monospace; margin-top:4px; }
+.capture-tag { font-size:10px; padding:2px 8px; border-radius:6px; font-weight:500; flex-shrink:0; }
+.capture-tag-todo    { background:#3d2f6e; color:#c4b5fd; }
+.capture-tag-google  { background:#1a3d38; color:#4ade80; }
+.capture-tag-buy     { background:#3d2e10; color:#fbbf24; }
+.capture-tag-other   { background:#222230; color:#888; }
+.capture-empty { text-align:center; padding:32px 16px; font-size:13px; color:#444; }
+.capture-empty-icon { font-size:32px; margin-bottom:8px; }
+.inbox-add-row { display:flex; gap:8px; margin-bottom:14px; }
+.inbox-add-input { flex:1; background:#16161f; border:1px solid #2a2a3a; border-radius:12px; padding:11px 14px; font-family:'DM Sans',sans-serif; font-size:13px; color:#e8e6f0; outline:none; }
+.inbox-add-input:focus { border-color:var(--accent-border); }
+.inbox-tag-row { display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
+.inbox-tag-chip { padding:7px 14px; border-radius:10px; font-size:12px; font-weight:500; background:#1c1c28; border:1px solid #2a2a3a; cursor:pointer; color:#888; transition:all .15s; }
+.inbox-tag-chip.selected { background:var(--accent-dim); border-color:var(--accent-border); color:var(--accent); }
+.inbox-add-btn { background:var(--accent); border:none; border-radius:12px; padding:11px 16px; font-size:13px; color:#fff; cursor:pointer; font-family:'DM Sans',sans-serif; font-weight:500; white-space:nowrap; }
+.capture-actions { display:flex; gap:6px; margin-top:8px; }
+.capture-action-btn { font-size:11px; padding:4px 10px; border-radius:8px; border:1px solid #2a2a3a; background:#1c1c28; color:#666; cursor:pointer; transition:all .15s; }
+.capture-action-btn:hover { background:#242434; color:#e8e6f0; }
+.capture-action-btn.done-btn { border-color:#22c55e33; color:#22c55e; background:#22c55e11; }
+.capture-done { opacity:0.4; }
+.capture-done .capture-card-text { text-decoration:line-through; }
+.inbox-badge { background:var(--accent); color:#fff; border-radius:6px; font-size:10px; padding:1px 5px; font-family:'DM Mono',monospace; margin-left:4px; }
+
 /* ── Utility ── */
 .hidden { display:none !important; }
 
@@ -411,10 +444,15 @@ html, body { height: 100%; background: #0a0a0e; }
           <div class="tile-name">personalise</div>
           <div class="tile-sub">name, colour, snooze</div>
         </div>
-        <div class="tile wide accent-red" onclick="openQuickAdd()">
+        <div class="tile accent-purple" onclick="goScreen('inbox')">
+          <span class="tile-icon">📥</span>
+          <div class="tile-name">capture inbox</div>
+          <div class="tile-sub">thoughts, todos, ideas</div>
+        </div>
+        <div class="tile accent-red" onclick="openQuickAdd()">
           <span class="tile-icon">➕</span>
-          <div class="tile-name">quick add reminder</div>
-          <div class="tile-sub">set a new vocal reminder or alarm</div>
+          <div class="tile-name">quick add</div>
+          <div class="tile-sub">set a new reminder</div>
         </div>
       </div>
     </div>
@@ -527,6 +565,7 @@ html, body { height: 100%; background: #0a0a0e; }
   <div class="bottom-nav">
     <div class="nav-item active" id="nav-home" onclick="goScreen('home')"><span class="nav-icon">🏠</span><span class="nav-label">home</span></div>
     <div class="nav-item" id="nav-reminders" onclick="goScreen('reminders')"><span class="nav-icon">🔔</span><span class="nav-label">remind</span></div>
+    <div class="nav-item" id="nav-inbox" onclick="goScreen('inbox')"><span class="nav-icon">📥</span><span class="nav-label">inbox</span></div>
     <div class="nav-item" id="nav-stats" onclick="goScreen('stats')"><span class="nav-icon">📊</span><span class="nav-label">stats</span></div>
     <div class="nav-item" id="nav-habits" onclick="goScreen('habits')"><span class="nav-icon">🌱</span><span class="nav-label">habits</span></div>
     <div class="nav-item" id="nav-settings" onclick="goScreen('settings')"><span class="nav-icon">⚙️</span><span class="nav-label">settings</span></div>
@@ -561,6 +600,29 @@ html, body { height: 100%; background: #0a0a0e; }
     </div>
   </div>
 
+
+
+    <!-- CAPTURE INBOX -->
+    <div class="screen" id="screen-inbox">
+      <div class="inbox-add-row">
+        <input class="inbox-add-input" id="inbox-input" placeholder="capture a thought..." onkeydown="handleInboxKey(event)"/>
+        <button class="inbox-add-btn" onclick="addCapture()">add</button>
+      </div>
+      <div class="inbox-tag-row" id="inbox-tag-row">
+        <div class="inbox-tag-chip selected" onclick="selectInboxTag(this,'todo')">📋 To Do</div>
+        <div class="inbox-tag-chip" onclick="selectInboxTag(this,'google')">🔍 To Google</div>
+        <div class="inbox-tag-chip" onclick="selectInboxTag(this,'buy')">🛒 To Buy</div>
+        <div class="inbox-tag-chip" onclick="selectInboxTag(this,'other')">💭 Other</div>
+      </div>
+      <div class="inbox-tabs" id="inbox-tabs">
+        <div class="inbox-tab active" onclick="filterInbox('all')">All <span class="tab-count" id="tab-count-all">0</span></div>
+        <div class="inbox-tab" onclick="filterInbox('todo')">📋 To Do <span class="tab-count" id="tab-count-todo">0</span></div>
+        <div class="inbox-tab" onclick="filterInbox('google')">🔍 To Google <span class="tab-count" id="tab-count-google">0</span></div>
+        <div class="inbox-tab" onclick="filterInbox('buy')">🛒 To Buy <span class="tab-count" id="tab-count-buy">0</span></div>
+        <div class="inbox-tab" onclick="filterInbox('other')">💭 Other <span class="tab-count" id="tab-count-other">0</span></div>
+      </div>
+      <div id="inbox-list"></div>
+    </div>
 
   <!-- Edit Modal -->
   <div class="edit-modal hidden" id="edit-modal">
@@ -687,8 +749,10 @@ function goScreen(name) {
   if (name === 'stats')    renderStats();
   if (name === 'habits')   renderHabits();
   if (name === 'winddown') renderWinddown();
+updateInboxBadge();
   if (name === 'settings') loadSettings();
   if (name === 'reminders') renderAllReminders();
+  if (name === 'inbox') { renderInbox(); updateInboxBadge(); }
   if (name === 'home') {
     renderHomeReminders();
     updateHomeStats();
@@ -919,10 +983,11 @@ function handleCapture(e) {
   if (e.key !== 'Enter') return;
   const val = document.getElementById('capture-field').value.trim();
   if (!val) return;
-  reminders.push({ time: '', text: val, tag: 'idea', snoozeCount: 0, fired: false, snoozedUntil: null });
-  save('fb_reminders', reminders);
+  // Add to inbox as 'other' by default from home capture
+  addCaptureItem(val, 'other');
   document.getElementById('capture-field').value = '';
-  renderHomeReminders();
+  // Show brief toast
+  showToast('captured → inbox 📥');
 }
 
 // ── Quick add modal ──────────────────────────────────────────
@@ -1125,9 +1190,11 @@ function renderWinddown() {
   if (badge) badge.textContent = activeCount + ' set';
 }
 
-function toggleWndItem(i) { winddown[i].on = !winddown[i].on; save('fb_winddown', winddown); renderWinddown(); }
+function toggleWndItem(i) { winddown[i].on = !winddown[i].on; save('fb_winddown', winddown); renderWinddown();
+updateInboxBadge(); }
 
-function toggleWinddown() { cfg.winddownOn = !cfg.winddownOn; save('fb_cfg', cfg); renderWinddown(); }
+function toggleWinddown() { cfg.winddownOn = !cfg.winddownOn; save('fb_cfg', cfg); renderWinddown();
+updateInboxBadge(); }
 
 function addWinddown() {
   const t   = document.getElementById('wnd-new-time').value;
@@ -1138,6 +1205,7 @@ function addWinddown() {
   document.getElementById('wnd-new-text').value = '';
   save('fb_winddown', winddown);
   renderWinddown();
+updateInboxBadge();
 }
 
 // ── Settings ─────────────────────────────────────────────────
@@ -1197,6 +1265,7 @@ updateTimerDisplay();
 renderHomeReminders();
 updateHomeStats();
 renderWinddown();
+updateInboxBadge();
 
 
 if ('serviceWorker' in navigator) {
@@ -1206,6 +1275,148 @@ if ('serviceWorker' in navigator) {
 }
 
 
+
+
+// ── Capture Inbox ─────────────────────────────────────────────
+let captures = load('fb_captures') || [];
+let inboxFilter = 'all';
+let inboxTagSelected = 'todo';
+
+const CAPTURE_TAGS = {
+  todo:   { label:'📋 To Do',    cls:'capture-tag-todo' },
+  google: { label:'🔍 To Google', cls:'capture-tag-google' },
+  buy:    { label:'🛒 To Buy',   cls:'capture-tag-buy' },
+  other:  { label:'💭 Other',    cls:'capture-tag-other' },
+};
+
+function selectInboxTag(el, tag) {
+  document.querySelectorAll('.inbox-tag-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  inboxTagSelected = tag;
+}
+
+function handleInboxKey(e) {
+  if (e.key === 'Enter') addCapture();
+}
+
+function addCapture() {
+  const inp = document.getElementById('inbox-input');
+  const text = inp.value.trim();
+  if (!text) return;
+  addCaptureItem(text, inboxTagSelected);
+  inp.value = '';
+}
+
+function addCaptureItem(text, tag) {
+  captures.unshift({
+    id: Date.now(),
+    text,
+    tag: tag || 'other',
+    done: false,
+    createdAt: new Date().toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'}),
+    createdDate: new Date().toLocaleDateString('en-GB', {day:'numeric', month:'short'}),
+  });
+  save('fb_captures', captures);
+  renderInbox();
+  updateInboxBadge();
+}
+
+function filterInbox(filter) {
+  inboxFilter = filter;
+  document.querySelectorAll('.inbox-tab').forEach(t => t.classList.remove('active'));
+  const tabs = document.querySelectorAll('.inbox-tab');
+  const idx = ['all','todo','google','buy','other'].indexOf(filter);
+  if (tabs[idx]) tabs[idx].classList.add('active');
+  renderInbox();
+}
+
+function renderInbox() {
+  const list = document.getElementById('inbox-list');
+  if (!list) return;
+  const filtered = inboxFilter === 'all' ? captures : captures.filter(c => c.tag === inboxFilter);
+
+  // Update counts
+  ['all','todo','google','buy','other'].forEach(tag => {
+    const el = document.getElementById('tab-count-' + tag);
+    if (el) {
+      const count = tag === 'all' ? captures.filter(c => !c.done).length : captures.filter(c => c.tag === tag && !c.done).length;
+      el.textContent = count;
+    }
+  });
+
+  list.innerHTML = '';
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="capture-empty"><div class="capture-empty-icon">${inboxFilter === 'all' ? '📥' : inboxFilter === 'todo' ? '📋' : inboxFilter === 'google' ? '🔍' : inboxFilter === 'buy' ? '🛒' : '💭'}</div>nothing here yet — capture something!</div>`;
+    return;
+  }
+
+  filtered.forEach((c, fi) => {
+    const realIdx = captures.indexOf(c);
+    const t = CAPTURE_TAGS[c.tag] || CAPTURE_TAGS.other;
+    const card = document.createElement('div');
+    card.className = 'capture-card' + (c.done ? ' capture-done' : '');
+    card.innerHTML = `
+      <div class="capture-card-header">
+        <div style="flex:1">
+          <div class="capture-card-text">${c.text}</div>
+          <div class="capture-card-time">${c.createdDate} · ${c.createdAt}</div>
+        </div>
+        <span class="capture-tag ${t.cls}">${t.label}</span>
+      </div>
+      <div class="capture-actions">
+        <button class="capture-action-btn done-btn" onclick="toggleCaptureDone(${realIdx})">${c.done ? '↩ undo' : '✓ done'}</button>
+        <button class="capture-action-btn" onclick="changeCaptureTag(${realIdx},'todo')">📋</button>
+        <button class="capture-action-btn" onclick="changeCaptureTag(${realIdx},'google')">🔍</button>
+        <button class="capture-action-btn" onclick="changeCaptureTag(${realIdx},'buy')">🛒</button>
+        <button class="capture-action-btn" onclick="changeCaptureTag(${realIdx},'other')">💭</button>
+        <button class="capture-action-btn" onclick="deleteCapture(${realIdx})" style="margin-left:auto;color:#ef4444;border-color:#ef444433">🗑️</button>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+}
+
+function toggleCaptureDone(idx) {
+  captures[idx].done = !captures[idx].done;
+  save('fb_captures', captures);
+  renderInbox();
+  updateInboxBadge();
+}
+
+function changeCaptureTag(idx, newTag) {
+  captures[idx].tag = newTag;
+  save('fb_captures', captures);
+  renderInbox();
+}
+
+function deleteCapture(idx) {
+  captures.splice(idx, 1);
+  save('fb_captures', captures);
+  renderInbox();
+  updateInboxBadge();
+}
+
+function updateInboxBadge() {
+  const undone = captures.filter(c => !c.done).length;
+  const navEl = document.getElementById('nav-inbox');
+  if (!navEl) return;
+  const existing = navEl.querySelector('.inbox-badge');
+  if (existing) existing.remove();
+  if (undone > 0) {
+    const badge = document.createElement('span');
+    badge.className = 'inbox-badge';
+    badge.textContent = undone;
+    navEl.appendChild(badge);
+  }
+}
+
+function showToast(msg) {
+  const toast = document.createElement('div');
+  toast.style.cssText = 'position:absolute;bottom:90px;left:50%;transform:translateX(-50%);background:#a78bfa22;border:1px solid #a78bfa44;border-radius:12px;padding:8px 18px;font-size:13px;color:var(--accent);white-space:nowrap;z-index:60';
+  toast.textContent = msg;
+  document.getElementById('app').appendChild(toast);
+  setTimeout(() => toast.remove(), 2000);
+}
 
 // ── Day picker helpers ────────────────────────────────────────
 function toggleDay(el, prefix) {
@@ -1328,6 +1539,7 @@ function deleteWinddown(idx) {
   winddown.splice(idx, 1);
   save('fb_winddown', winddown);
   renderWinddown();
+updateInboxBadge();
 }
 
 function clearAllReminders() {
