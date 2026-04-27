@@ -720,6 +720,9 @@ let reminders = load('fb_reminders') || JSON.parse(JSON.stringify(DEFAULT_REMIND
 let habits    = load('fb_habits')    || JSON.parse(JSON.stringify(DEFAULT_HABITS));
 let winddown  = load('fb_winddown')  || JSON.parse(JSON.stringify(DEFAULT_WINDDOWN));
 
+let captures = load('fb_captures') || [];
+let inboxFilter = 'all';
+let inboxTagSelected = 'todo';
 let timerRunning = false, totalSecs = 25*60, remainSecs = 25*60, timerInt = null;
 let pomodorosToday = cfg.pomodoros ? (cfg.pomodoros[6] || 0) : 0;
 let activeAlerts = {};
@@ -1278,9 +1281,6 @@ if ('serviceWorker' in navigator) {
 
 
 // ── Capture Inbox ─────────────────────────────────────────────
-let captures = load('fb_captures') || [];
-let inboxFilter = 'all';
-let inboxTagSelected = 'todo';
 
 const CAPTURE_TAGS = {
   todo:   { label:'📋 To Do',    cls:'capture-tag-todo' },
