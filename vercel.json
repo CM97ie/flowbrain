@@ -1,0 +1,13 @@
+{
+  "functions": {
+    "api/send-notifications.js": { "maxDuration": 30 },
+    "api/subscribe.js": { "maxDuration": 10 },
+    "api/sync.js": { "maxDuration": 10 }
+  },
+  "crons": [
+    {
+      "path": "/api/send-notifications",
+      "schedule": "* * * * *"
+    }
+  ]
+}
