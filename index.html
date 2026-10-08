@@ -1558,6 +1558,75 @@ function clearAllHabits() {
   updateHomeStats();
 }
 
+
+// ── Push Notifications ────────────────────────────────────────
+const VERCEL_URL = 'https://flowbrain-pi.vercel.app';
+const VAPID_PUBLIC_KEY = 'BJgf73kT_e7bXknuCqB63aIu_Uffq9dk_MTcocjz4AiSzmDz_Qpbmv2YSE6Q3vPUIVVPrFihvwdaMOHJXJaeyQA';
+
+function getUserId() {
+  let uid = localStorage.getItem('fb_uid');
+  if (!uid) {
+    uid = 'user_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    localStorage.setItem('fb_uid', uid);
+  }
+  return uid;
+}
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+  return outputArray;
+}
+
+async function registerPushNotifications() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    console.log('Push not supported');
+    return;
+  }
+  try {
+    const reg = await navigator.serviceWorker.register('/flowbrain/sw-push.js');
+    await navigator.serviceWorker.ready;
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') return;
+    const subscription = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+    });
+    const userId = getUserId();
+    await fetch(VERCEL_URL + '/api/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, subscription })
+    });
+    await syncRemindersToServer();
+    showToast('🔔 push notifications enabled!');
+  } catch (err) {
+    console.error('Push registration failed:', err);
+  }
+}
+
+async function syncRemindersToServer() {
+  const userId = getUserId();
+  try {
+    await fetch(VERCEL_URL + '/api/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, action: 'push', table: 'reminders', data: reminders })
+    });
+  } catch(e) { console.log('Sync failed:', e); }
+}
+
+window.addEventListener('load', () => {
+  setTimeout(registerPushNotifications, 2000);
+});
+
+navigator.serviceWorker && navigator.serviceWorker.addEventListener('message', e => {
+  if (e.data && e.data.type === 'NOTIFICATION_CLICK') goScreen('reminders');
+});
+
 </script>
 </body>
 </html>
