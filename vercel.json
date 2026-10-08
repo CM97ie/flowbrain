@@ -1,30 +1,21 @@
 {
-  "headers": [
-    {
-      "source": "/manifest.json",
-      "headers": [
-        { "key": "Content-Type", "value": "application/manifest+json" },
-        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
-      ]
-    },
-    {
-      "source": "/sw-push.js",
-      "headers": [
-        { "key": "Content-Type", "value": "application/javascript" },
-        { "key": "Service-Worker-Allowed", "value": "/" },
-        { "key": "Cache-Control", "value": "no-cache" }
-      ]
-    }
+  "outputDirectory": ".",
+  "builds": [
+    { "src": "index.html", "use": "@vercel/static" },
+    { "src": "manifest2.json", "use": "@vercel/static" },
+    { "src": "sw-push.js", "use": "@vercel/static" },
+    { "src": "icons/**", "use": "@vercel/static" },
+    { "src": "api/send-notifications.js", "use": "@vercel/node" },
+    { "src": "api/subscribe.js", "use": "@vercel/node" },
+    { "src": "api/sync.js", "use": "@vercel/node" }
   ],
-  "functions": {
-    "api/send-notifications.js": { "maxDuration": 30 },
-    "api/subscribe.js": { "maxDuration": 10 },
-    "api/sync.js": { "maxDuration": 10 }
-  },
+  "routes": [
+    { "src": "/manifest2.json", "dest": "/manifest2.json" },
+    { "src": "/sw-push.js", "dest": "/sw-push.js", "headers": { "Service-Worker-Allowed": "/" } },
+    { "src": "/api/(.*)", "dest": "/api/$1" },
+    { "src": "/(.*)", "dest": "/index.html" }
+  ],
   "crons": [
-    {
-      "path": "/api/send-notifications",
-      "schedule": "* * * * *"
-    }
+    { "path": "/api/send-notifications", "schedule": "* * * * *" }
   ]
 }
