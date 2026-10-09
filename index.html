@@ -774,7 +774,7 @@ const DEFAULT_CFG = {
   winddownTime: '20:30',
   winddownOn: true,
   volume: 0.8,
-  pomodoros: [3,5,2,6,4,1,0],
+  pomodoros: [0,0,0,0,0,0,0],
 };
 
 const DEFAULT_REMINDERS = [
@@ -785,11 +785,11 @@ const DEFAULT_REMINDERS = [
 ];
 
 const DEFAULT_HABITS = [
-  { name:'Take medication',      streak:12, history:[1,1,1,1,1,1,0], done:false },
-  { name:'Drink water (8 glasses)', streak:5, history:[1,1,0,1,1,1,0], done:false },
-  { name:'10 min walk outside',  streak:3,  history:[0,1,1,1,1,0,0], done:false },
-  { name:'No phone first 30 min',streak:7,  history:[1,1,1,1,1,1,1], done:false },
-  { name:'Journal / brain dump', streak:2,  history:[0,0,1,0,1,1,0], done:false },
+  { name:'Take medication',      streak:0, history:[0,0,0,0,0,0,0], done:false },
+  { name:'Drink water (8 glasses)', streak:0, history:[0,0,0,0,0,0,0], done:false },
+  { name:'10 min walk outside',  streak:0,  history:[0,0,0,0,0,0,0], done:false },
+  { name:'No phone first 30 min',streak:0,  history:[0,0,0,0,0,0,0], done:false },
+  { name:'Journal / brain dump', streak:0,  history:[0,0,0,0,0,0,0], done:false },
 ];
 
 const DEFAULT_WINDDOWN = [
@@ -805,6 +805,17 @@ let cfg       = load('fb_cfg')       || JSON.parse(JSON.stringify(DEFAULT_CFG));
 let reminders = load('fb_reminders') || JSON.parse(JSON.stringify(DEFAULT_REMINDERS));
 let habits    = load('fb_habits')    || JSON.parse(JSON.stringify(DEFAULT_HABITS));
 let winddown  = load('fb_winddown')  || JSON.parse(JSON.stringify(DEFAULT_WINDDOWN));
+
+
+// ── Version check — clear old demo data ──────────────────────
+(function() {
+  const DATA_VERSION = '2';
+  if (localStorage.getItem('fb_data_version') !== DATA_VERSION) {
+    ['fb_cfg','fb_reminders','fb_habits','fb_captures','fb_winddown','fb_stats'].forEach(k => localStorage.removeItem(k));
+    localStorage.setItem('fb_data_version', DATA_VERSION);
+    console.log('Fresh start — demo data cleared');
+  }
+})();
 
 let captures = load('fb_captures') || [];
 let inboxFilter = 'all';
