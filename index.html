@@ -865,6 +865,8 @@ function updateClock() {
   const n = new Date();
   const hh = String(n.getHours()).padStart(2,'0');
   const mm = String(n.getMinutes()).padStart(2,'0');
+  // Reset wind-down fired status at midnight
+  if (hh === '00' && mm === '00') resetWinddownFired();
   document.getElementById('clock').textContent = hh + ':' + mm;
   const h = n.getHours();
   document.getElementById('greeting-text').textContent = h < 12 ? 'good morning,' : h < 17 ? 'good afternoon,' : 'good evening,';
@@ -936,21 +938,74 @@ function renderReminderItem(container, r, idx) {
 function checkReminders(timeStr) {
   const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   const todayName = dayNames[new Date().getDay()];
+
+  // Check regular reminders
   reminders.forEach((r, i) => {
     if (r.fired) return;
-    // Check if today is a scheduled day
     const days = r.days || [];
     const isEvery = days.length === 0 || days.length === 7;
     if (!isEvery && !days.includes(todayName)) return;
     const trigger = r.snoozedUntil || r.time;
     if (trigger === timeStr && !activeAlerts[i]) {
       showAlert(i);
-      // For repeating reminders, reset fired at end of day check
       if (isEvery || days.length > 1) {
         setTimeout(() => { r.fired = false; save('fb_reminders', reminders); }, 60000);
       }
     }
   });
+
+  // Check wind-down reminders if enabled
+  if (cfg.winddownOn) {
+    winddown.forEach((item, i) => {
+      if (!item.on || item.firedToday) return;
+      if (item.time === timeStr) {
+        fireWinddownReminder(item, i);
+      }
+    });
+  }
+}
+
+function fireWinddownReminder(item, idx) {
+  // Mark as fired for today
+  winddown[idx].firedToday = true;
+  save('fb_winddown', winddown);
+
+  // Show alert banner
+  const wrap = document.getElementById('alert-wrap');
+  const card = document.createElement('div');
+  card.className = 'alert-card level0';
+  card.id = 'wnd-alert-' + idx;
+  card.innerHTML = \`
+    <div class="alert-header">
+      <span class="alert-emoji">🌙</span>
+      <div style="flex:1">
+        <div class="alert-title-text level0">\${item.text}</div>
+        <div class="alert-sub-text">wind-down reminder</div>
+      </div>
+      <span class="alert-dismiss" onclick="dismissWinddownAlert(\${idx})">✕</span>
+    </div>
+    <div class="alert-actions">
+      <button class="alert-done-btn" onclick="dismissWinddownAlert(\${idx})">✓ got it</button>
+    </div>
+  \`;
+  wrap.appendChild(card);
+
+  // Speak it
+  speak(\`Wind-down reminder: \${item.text}\`, cfg.volume || 0.8, 0.92, 1.05);
+
+  // Auto-dismiss after 30 seconds
+  setTimeout(() => dismissWinddownAlert(idx), 30000);
+}
+
+function dismissWinddownAlert(idx) {
+  const el = document.getElementById('wnd-alert-' + idx);
+  if (el) el.remove();
+}
+
+function resetWinddownFired() {
+  // Reset firedToday on all wind-down items at midnight
+  winddown.forEach(item => { item.firedToday = false; });
+  save('fb_winddown', winddown);
 }
 
 function showAlert(idx) {
@@ -1320,8 +1375,13 @@ function toggleWndItem(i) { winddown[i].on = !winddown[i].on; save('fb_winddown'
 updateInboxBadge();
 checkWeeklyReset(); }
 
-function toggleWinddown() { cfg.winddownOn = !cfg.winddownOn; save('fb_cfg', cfg); renderWinddown();
-updateInboxBadge();
+function toggleWinddown() { 
+  cfg.winddownOn = !cfg.winddownOn; 
+  save('fb_cfg', cfg); 
+  // Just update the master toggle UI without re-rendering the whole list
+  const master = document.getElementById('wnd-master-toggle');
+  if (master) master.className = 'wnd-toggle' + (cfg.winddownOn ? ' on' : '');
+  showToast(cfg.winddownOn ? '🌙 wind-down enabled' : '🌙 wind-down disabled');
 checkWeeklyReset(); }
 
 function addWinddown() {
