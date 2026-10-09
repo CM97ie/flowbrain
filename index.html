@@ -975,23 +975,23 @@ function fireWinddownReminder(item, idx) {
   const card = document.createElement('div');
   card.className = 'alert-card level0';
   card.id = 'wnd-alert-' + idx;
-  card.innerHTML = \`
+  card.innerHTML = `
     <div class="alert-header">
       <span class="alert-emoji">🌙</span>
       <div style="flex:1">
-        <div class="alert-title-text level0">\${item.text}</div>
+        <div class="alert-title-text level0">${item.text}</div>
         <div class="alert-sub-text">wind-down reminder</div>
       </div>
-      <span class="alert-dismiss" onclick="dismissWinddownAlert(\${idx})">✕</span>
+      <span class="alert-dismiss" onclick="dismissWinddownAlert(${idx})">✕</span>
     </div>
     <div class="alert-actions">
-      <button class="alert-done-btn" onclick="dismissWinddownAlert(\${idx})">✓ got it</button>
+      <button class="alert-done-btn" onclick="dismissWinddownAlert(${idx})">✓ got it</button>
     </div>
-  \`;
+  `;
   wrap.appendChild(card);
 
   // Speak it
-  speak(\`Wind-down reminder: \${item.text}\`, cfg.volume || 0.8, 0.92, 1.05);
+  speak(`Wind-down reminder: ${item.text}`, cfg.volume || 0.8, 0.92, 1.05);
 
   // Auto-dismiss after 30 seconds
   setTimeout(() => dismissWinddownAlert(idx), 30000);
