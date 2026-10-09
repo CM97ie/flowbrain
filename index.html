@@ -8,8 +8,12 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
   <meta name="apple-mobile-web-app-title" content="flowbrain"/>
   <title>flowbrain</title>
-  <link rel="manifest" href="/manifest2.json"/>
-  
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="apple-touch-icon" href="icons/icon-192.png"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="flowbrain"/>
+  <meta name="theme-color" content="#0f0f13"/>
   
   
   
@@ -356,40 +360,6 @@ html, body { height: 100%; background: #0a0a0e; }
 .hidden { display:none !important; }
 
 </style>
-
-<script>
-// Register inline service worker for PWA
-if ('serviceWorker' in navigator) {
-  const swCode = `
-self.addEventListener('install', e => self.skipWaiting());
-self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
-self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => new Response(''))));
-self.addEventListener('push', e => {
-  const data = e.data ? e.data.json() : {};
-  e.waitUntil(self.registration.showNotification(data.title || 'flowbrain', {
-    body: data.body || '',
-    icon: data.icon || '',
-    tag: data.tag || 'flowbrain',
-    vibrate: [200, 100, 200],
-    data: data.data || {}
-  }));
-});
-self.addEventListener('notificationclick', e => {
-  e.notification.close();
-  e.waitUntil(clients.matchAll({type:'window'}).then(cs => {
-    if (cs.length > 0) return cs[0].focus();
-    return clients.openWindow('/');
-  }));
-});
-  `;
-  const blob = new Blob([swCode], {type: 'application/javascript'});
-  const swUrl = URL.createObjectURL(blob);
-  navigator.serviceWorker.register(swUrl, {scope: '/'}).then(reg => {
-    console.log('SW registered');
-    window._swReg = reg;
-  }).catch(err => console.log('SW error:', err));
-}
-</script>
 </head>
 <body>
 <div class="app" id="app">
@@ -635,8 +605,6 @@ self.addEventListener('notificationclick', e => {
       <button class="save-btn" onclick="saveEntry()">save &amp; schedule voice alert</button>
     </div>
   </div>
-
-
 
     <!-- CAPTURE INBOX -->
     <div class="screen" id="screen-inbox">
@@ -1313,9 +1281,6 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-
-
-
 // ── Capture Inbox ─────────────────────────────────────────────
 
 const CAPTURE_TAGS = {
@@ -1593,75 +1558,6 @@ function clearAllHabits() {
   renderHabits();
   updateHomeStats();
 }
-
-
-// ── Push Notifications ────────────────────────────────────────
-const VERCEL_URL = 'https://flowbrain-pi.vercel.app';
-const VAPID_PUBLIC_KEY = 'BJgf73kT_e7bXknuCqB63aIu_Uffq9dk_MTcocjz4AiSzmDz_Qpbmv2YSE6Q3vPUIVVPrFihvwdaMOHJXJaeyQA';
-
-function getUserId() {
-  let uid = localStorage.getItem('fb_uid');
-  if (!uid) {
-    uid = 'user_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
-    localStorage.setItem('fb_uid', uid);
-  }
-  return uid;
-}
-
-function urlBase64ToUint8Array(base64String) {
-  const padding = '='.repeat((4 - base64String.length % 4) % 4);
-  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-  const rawData = window.atob(base64);
-  const outputArray = new Uint8Array(rawData.length);
-  for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
-  return outputArray;
-}
-
-async function registerPushNotifications() {
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-    console.log('Push not supported');
-    return;
-  }
-  try {
-    const reg = await navigator.serviceWorker.register('/flowbrain/sw-push.js');
-    await navigator.serviceWorker.ready;
-    const permission = await Notification.requestPermission();
-    if (permission !== 'granted') return;
-    const subscription = await reg.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-    });
-    const userId = getUserId();
-    await fetch(VERCEL_URL + '/api/subscribe', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, subscription })
-    });
-    await syncRemindersToServer();
-    showToast('🔔 push notifications enabled!');
-  } catch (err) {
-    console.error('Push registration failed:', err);
-  }
-}
-
-async function syncRemindersToServer() {
-  const userId = getUserId();
-  try {
-    await fetch(VERCEL_URL + '/api/sync', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, action: 'push', table: 'reminders', data: reminders })
-    });
-  } catch(e) { console.log('Sync failed:', e); }
-}
-
-window.addEventListener('load', () => {
-  setTimeout(registerPushNotifications, 2000);
-});
-
-navigator.serviceWorker && navigator.serviceWorker.addEventListener('message', e => {
-  if (e.data && e.data.type === 'NOTIFICATION_CLICK') goScreen('reminders');
-});
 
 </script>
 </body>
