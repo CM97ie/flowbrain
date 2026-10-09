@@ -356,6 +356,29 @@ html, body { height: 100%; background: #0a0a0e; }
 .capture-done .capture-card-text { text-decoration:line-through; }
 .inbox-badge { background:var(--accent); color:#fff; border-radius:6px; font-size:10px; padding:1px 5px; font-family:'DM Mono',monospace; margin-left:4px; }
 
+
+/* ── Stats targets ── */
+.stats-week-label { font-size: 12px; color: #555; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
+.stats-reset-badge { font-size: 10px; font-family: 'DM Mono', monospace; background: #22c55e22; color: #22c55e; border-radius: 8px; padding: 3px 8px; }
+.metric-card { position: relative; }
+.metric-target { font-size: 10px; color: #444; margin-top: 6px; font-family: 'DM Mono', monospace; }
+.metric-progress { height: 3px; background: #1e1e2a; border-radius: 2px; margin-top: 6px; overflow: hidden; }
+.metric-progress-fill { height: 100%; border-radius: 2px; transition: width .6s ease; }
+.target-edit-btn { position: absolute; top: 10px; right: 10px; font-size: 11px; background: none; border: none; color: #444; cursor: pointer; padding: 2px; }
+.target-edit-btn:hover { color: var(--accent); }
+.stats-targets-card { background: #16161f; border: 1px solid #222230; border-radius: 16px; padding: 16px; margin-bottom: 14px; }
+.target-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #1a1a24; }
+.target-row:last-child { border-bottom: none; }
+.target-label { font-size: 13px; color: #c4c0d8; }
+.target-input { width: 70px; background: #0f0f13; border: 1px solid #2a2a3a; border-radius: 8px; padding: 6px 10px; font-family: 'DM Mono', monospace; font-size: 13px; color: #e8e6f0; outline: none; text-align: center; }
+.target-input:focus { border-color: var(--accent-border); }
+.target-unit { font-size: 11px; color: #555; margin-left: 6px; }
+.stats-section-title { font-size: 12px; font-weight: 500; color: var(--accent); margin-bottom: 10px; }
+.week-nav { display: flex; align-items: center; gap: 8px; }
+.week-nav-btn { background: #16161f; border: 1px solid #222230; border-radius: 8px; padding: 4px 10px; font-size: 12px; color: #888; cursor: pointer; }
+.week-nav-btn:hover { background: #1c1c28; color: #e8e6f0; }
+.reset-countdown { font-size: 10px; color: #555; text-align: center; margin-bottom: 10px; font-family: 'DM Mono', monospace; }
+
 /* ── Utility ── */
 .hidden { display:none !important; }
 
@@ -473,13 +496,72 @@ html, body { height: 100%; background: #0a0a0e; }
 
     <!-- STATS -->
     <div class="screen" id="screen-stats">
-      <div class="section-label">this week</div>
-      <div class="metric-grid">
-        <div class="metric-card"><div class="metric-val" id="stat-pomodoros" style="color:var(--accent)">0</div><div class="metric-label">pomodoros</div></div>
-        <div class="metric-card"><div class="metric-val" id="stat-focus-hrs" style="color:#22c55e">0h</div><div class="metric-label">focus time</div></div>
-        <div class="metric-card"><div class="metric-val" id="stat-habits-done" style="color:#f59e0b">0</div><div class="metric-label">habits done</div></div>
-        <div class="metric-card"><div class="metric-val" id="stat-best-streak" style="color:#f87171">0</div><div class="metric-label">best streak</div></div>
+      <div class="stats-week-label">
+        <span id="stats-week-range">this week</span>
+        <span class="stats-reset-badge" id="stats-reset-badge">resets Monday</span>
       </div>
+      <div class="reset-countdown" id="reset-countdown"></div>
+
+      <div class="metric-grid">
+        <div class="metric-card">
+          <div class="metric-val" id="stat-pomodoros" style="color:var(--accent)">0</div>
+          <div class="metric-label">pomodoros</div>
+          <div class="metric-progress"><div class="metric-progress-fill" id="prog-pomodoros" style="background:var(--accent);width:0%"></div></div>
+          <div class="metric-target" id="target-label-pomodoros">target: — </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-val" id="stat-focus-hrs" style="color:#22c55e">0h</div>
+          <div class="metric-label">focus time</div>
+          <div class="metric-progress"><div class="metric-progress-fill" id="prog-focus" style="background:#22c55e;width:0%"></div></div>
+          <div class="metric-target" id="target-label-focus">target: —</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-val" id="stat-habits-done" style="color:#f59e0b">0</div>
+          <div class="metric-label">habits done</div>
+          <div class="metric-progress"><div class="metric-progress-fill" id="prog-habits" style="background:#f59e0b;width:0%"></div></div>
+          <div class="metric-target" id="target-label-habits">target: —</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-val" id="stat-best-streak" style="color:#f87171">0</div>
+          <div class="metric-label">best streak</div>
+          <div class="metric-progress"><div class="metric-progress-fill" id="prog-streak" style="background:#f87171;width:0%"></div></div>
+          <div class="metric-target" id="target-label-streak">target: —</div>
+        </div>
+      </div>
+
+      <div class="section-label">set weekly targets</div>
+      <div class="stats-targets-card">
+        <div class="target-row">
+          <span class="target-label">🍅 pomodoros per week</span>
+          <div style="display:flex;align-items:center">
+            <input class="target-input" id="target-pomodoros" type="number" min="0" max="200" placeholder="—"/>
+            <span class="target-unit">sessions</span>
+          </div>
+        </div>
+        <div class="target-row">
+          <span class="target-label">⏱️ focus hours per week</span>
+          <div style="display:flex;align-items:center">
+            <input class="target-input" id="target-focus" type="number" min="0" max="100" placeholder="—"/>
+            <span class="target-unit">hours</span>
+          </div>
+        </div>
+        <div class="target-row">
+          <span class="target-label">🌱 habit completions</span>
+          <div style="display:flex;align-items:center">
+            <input class="target-input" id="target-habits" type="number" min="0" max="200" placeholder="—"/>
+            <span class="target-unit">done</span>
+          </div>
+        </div>
+        <div class="target-row">
+          <span class="target-label">🔥 streak target</span>
+          <div style="display:flex;align-items:center">
+            <input class="target-input" id="target-streak" type="number" min="0" max="365" placeholder="—"/>
+            <span class="target-unit">days</span>
+          </div>
+        </div>
+        <button class="save-btn" onclick="saveTargets()" style="margin-top:12px">save targets</button>
+      </div>
+
       <div class="section-label">daily pomodoros</div>
       <div class="bar-chart" id="pomodoro-bar-chart"></div>
       <div class="section-label">habit completion</div>
@@ -757,6 +839,7 @@ function goScreen(name) {
   if (name === 'habits')   renderHabits();
   if (name === 'winddown') renderWinddown();
 updateInboxBadge();
+checkWeeklyReset();
   if (name === 'settings') loadSettings();
   if (name === 'reminders') renderAllReminders();
   if (name === 'inbox') { renderInbox(); updateInboxBadge(); }
@@ -1141,6 +1224,15 @@ function addHabit() {
 
 // ── Stats ────────────────────────────────────────────────────
 function renderStats() {
+  // Check weekly reset first
+  checkWeeklyReset();
+
+  // Update week label and countdown
+  const weekRangeEl = document.getElementById('stats-week-range');
+  const countdownEl = document.getElementById('reset-countdown');
+  if (weekRangeEl) weekRangeEl.textContent = getWeekRangeLabel();
+  if (countdownEl) countdownEl.textContent = getResetCountdown();
+
   const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
   const poms = cfg.pomodoros || [0,0,0,0,0,0,0];
   const maxP = Math.max(...poms, 1);
@@ -1151,22 +1243,38 @@ function renderStats() {
       const pct = Math.round((poms[i] / maxP) * 100);
       const row = document.createElement('div');
       row.className = 'bar-row';
-      row.innerHTML = `<span class="bar-day">${d}</span><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:var(--accent)"></div></div><span class="bar-val">${poms[i]}</span>`;
+      const isToday = i === (new Date().getDay() + 6) % 7;
+      row.innerHTML = `<span class="bar-day" style="${isToday?'color:var(--accent)':''}">${d}</span><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:var(--accent)"></div></div><span class="bar-val">${poms[i]}</span>`;
       barEl.appendChild(row);
     });
   }
+
   const total = poms.reduce((a,b) => a+b, 0);
+  const focusHrs = Math.round(total * 25 / 60 * 10) / 10;
   const el = id => document.getElementById(id);
   if (el('stat-pomodoros')) el('stat-pomodoros').textContent = total;
-  if (el('stat-focus-hrs')) el('stat-focus-hrs').textContent = (Math.round(total * 25 / 60 * 10) / 10) + 'h';
+  if (el('stat-focus-hrs')) el('stat-focus-hrs').textContent = focusHrs + 'h';
+
   const totalHabitsDone = habits.reduce((a, h) => a + h.history.filter(Boolean).length, 0);
   if (el('stat-habits-done')) el('stat-habits-done').textContent = totalHabitsDone;
+
   const bestStreak = Math.max(...habits.map(h => {
     let s = 0, max = 0;
     h.history.forEach(v => { s = v ? s+1 : 0; max = Math.max(max, s); });
     return max;
   }), 0);
   if (el('stat-best-streak')) el('stat-best-streak').textContent = bestStreak;
+
+  // Update progress bars against targets
+  const t = statsData.targets || {};
+  updateProgressBar('prog-pomodoros', 'target-label-pomodoros', total, t.pomodoros || 0, 'sessions');
+  updateProgressBar('prog-focus', 'target-label-focus', focusHrs, t.focus || 0, 'hrs');
+  updateProgressBar('prog-habits', 'target-label-habits', totalHabitsDone, t.habits || 0, 'done');
+  updateProgressBar('prog-streak', 'target-label-streak', bestStreak, t.streak || 0, 'days');
+
+  // Load target inputs
+  loadTargetInputs();
+
   const habitEl = document.getElementById('habit-stat-list');
   if (habitEl) {
     habitEl.innerHTML = '';
@@ -1198,10 +1306,12 @@ function renderWinddown() {
 }
 
 function toggleWndItem(i) { winddown[i].on = !winddown[i].on; save('fb_winddown', winddown); renderWinddown();
-updateInboxBadge(); }
+updateInboxBadge();
+checkWeeklyReset(); }
 
 function toggleWinddown() { cfg.winddownOn = !cfg.winddownOn; save('fb_cfg', cfg); renderWinddown();
-updateInboxBadge(); }
+updateInboxBadge();
+checkWeeklyReset(); }
 
 function addWinddown() {
   const t   = document.getElementById('wnd-new-time').value;
@@ -1213,6 +1323,7 @@ function addWinddown() {
   save('fb_winddown', winddown);
   renderWinddown();
 updateInboxBadge();
+checkWeeklyReset();
 }
 
 // ── Settings ─────────────────────────────────────────────────
@@ -1273,6 +1384,7 @@ renderHomeReminders();
 updateHomeStats();
 renderWinddown();
 updateInboxBadge();
+checkWeeklyReset();
 
 
 if ('serviceWorker' in navigator) {
@@ -1419,6 +1531,97 @@ function showToast(msg) {
   setTimeout(() => toast.remove(), 2000);
 }
 
+
+// ── Weekly stats reset & targets ─────────────────────────────
+const STATS_DEFAULTS = {
+  targets: { pomodoros: 0, focus: 0, habits: 0, streak: 0 },
+  weekStart: null,
+  weeklyPomodoros: [0,0,0,0,0,0,0],
+};
+
+let statsData = load('fb_stats') || JSON.parse(JSON.stringify(STATS_DEFAULTS));
+
+function getMondayOfWeek(date) {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = (day === 0 ? -6 : 1 - day);
+  d.setDate(d.getDate() + diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function checkWeeklyReset() {
+  const now = new Date();
+  const thisMonday = getMondayOfWeek(now);
+  const storedWeekStart = statsData.weekStart ? new Date(statsData.weekStart) : null;
+
+  if (!storedWeekStart || thisMonday > storedWeekStart) {
+    // Reset for new week
+    statsData.weekStart = thisMonday.toISOString();
+    statsData.weeklyPomodoros = [0,0,0,0,0,0,0];
+    // Also reset cfg pomodoros
+    cfg.pomodoros = [0,0,0,0,0,0,0];
+    pomodorosToday = 0;
+    save('fb_cfg', cfg);
+    save('fb_stats', statsData);
+    console.log('Weekly stats reset for new week starting', thisMonday.toDateString());
+  }
+}
+
+function getResetCountdown() {
+  const now = new Date();
+  const nextMonday = getMondayOfWeek(now);
+  nextMonday.setDate(nextMonday.getDate() + 7);
+  const diff = nextMonday - now;
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  return `resets in ${days}d ${hours}h ${mins}m`;
+}
+
+function getWeekRangeLabel() {
+  const monday = getMondayOfWeek(new Date());
+  const sunday = new Date(monday);
+  sunday.setDate(sunday.getDate() + 6);
+  const fmt = d => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  return `${fmt(monday)} – ${fmt(sunday)}`;
+}
+
+function saveTargets() {
+  statsData.targets = {
+    pomodoros: parseInt(document.getElementById('target-pomodoros').value) || 0,
+    focus: parseInt(document.getElementById('target-focus').value) || 0,
+    habits: parseInt(document.getElementById('target-habits').value) || 0,
+    streak: parseInt(document.getElementById('target-streak').value) || 0,
+  };
+  save('fb_stats', statsData);
+  renderStats();
+  showToast('✓ targets saved!');
+}
+
+function loadTargetInputs() {
+  const t = statsData.targets || {};
+  document.getElementById('target-pomodoros').value = t.pomodoros || '';
+  document.getElementById('target-focus').value = t.focus || '';
+  document.getElementById('target-habits').value = t.habits || '';
+  document.getElementById('target-streak').value = t.streak || '';
+}
+
+function updateProgressBar(id, labelId, value, target, unit) {
+  const pct = target > 0 ? Math.min(100, Math.round((value / target) * 100)) : 0;
+  const bar = document.getElementById(id);
+  const label = document.getElementById(labelId);
+  if (bar) bar.style.width = pct + '%';
+  if (label) {
+    if (target > 0) {
+      label.textContent = `${value} / ${target} ${unit} (${pct}%)`;
+      label.style.color = pct >= 100 ? '#22c55e' : '#555';
+    } else {
+      label.textContent = 'no target set';
+    }
+  }
+}
+
 // ── Day picker helpers ────────────────────────────────────────
 function toggleDay(el, prefix) {
   const everyBtn = document.querySelector(`#${prefix}-day-picker .every`);
@@ -1541,6 +1744,7 @@ function deleteWinddown(idx) {
   save('fb_winddown', winddown);
   renderWinddown();
 updateInboxBadge();
+checkWeeklyReset();
 }
 
 function clearAllReminders() {
