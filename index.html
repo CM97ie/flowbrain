@@ -1377,11 +1377,16 @@ checkWeeklyReset(); }
 
 function toggleWinddown() { 
   cfg.winddownOn = !cfg.winddownOn; 
+  // When turning ON — reset all individual reminders to active and clear firedToday
+  if (cfg.winddownOn) {
+    winddown.forEach(item => { item.on = true; item.firedToday = false; });
+    save('fb_winddown', winddown);
+    renderWinddown();
+  }
   save('fb_cfg', cfg); 
-  // Just update the master toggle UI without re-rendering the whole list
   const master = document.getElementById('wnd-master-toggle');
   if (master) master.className = 'wnd-toggle' + (cfg.winddownOn ? ' on' : '');
-  showToast(cfg.winddownOn ? '🌙 wind-down enabled' : '🌙 wind-down disabled');
+  showToast(cfg.winddownOn ? '🌙 wind-down on — all reminders reset' : '🌙 wind-down disabled');
 checkWeeklyReset(); }
 
 function addWinddown() {
